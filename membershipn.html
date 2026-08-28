@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym Membership</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFFFF; --panel:#FFFFFF; --panel-alt:#F2F6FC;
+    --line:#DCE4F0; --line-strong:#B9C7DE;
+    --text:#0F1D3B; --text-dim:#5B6B85; --text-faint:#8B98AC;
+    --blue:#15369E; --blue-dark:#0C2568; --blue-dim:rgba(21,54,158,0.08); --blue-dim-strong:rgba(21,54,158,0.14);
+    --gold:#B8860B; --gold-dark:#8C660A; --gold-dim:rgba(184,134,11,0.12);
+    --danger:#C0392B; --danger-dim:rgba(192,57,43,0.09);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1100px 560px at 88% -8%, var(--blue-dim), transparent 60%),
+      radial-gradient(900px 500px at 8% 108%, var(--gold-dim), transparent 55%),
+      var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif;
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 20px;
+  }
+  .card{
+    width:100%; max-width:480px; background:var(--panel); border:1px solid var(--line);
+    border-radius:16px; padding:30px 30px 30px; position:relative;
+    box-shadow:0 1px 3px rgba(15,29,59,0.04), 0 10px 30px rgba(15,29,59,0.06);
+  }
+  .brand-eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.18em;
+    text-transform:uppercase; color:var(--blue); margin:0 0 6px; text-align:center;
+  }
+  h1{
+    font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:0.02em; line-height:0.9;
+    margin:0 0 20px; text-align:center; color:var(--text);
+  }
+
+  /* Tabs */
+  .tab-bar{ display:flex; gap:8px; margin-bottom:22px; background:var(--panel-alt); padding:5px; border-radius:11px; }
+  .tab-btn{
+    flex:1; background:transparent; border:none; color:var(--text-dim);
+    padding:10px 8px; border-radius:8px; cursor:pointer; font-weight:700; font-size:12.5px;
+    font-family:'Inter',sans-serif; text-transform:uppercase; letter-spacing:0.02em;
+  }
+  .tab-btn.active{ background:var(--panel); color:var(--blue); box-shadow:0 1px 3px rgba(15,29,59,0.08); }
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .subhead{ text-align:center; font-size:12.5px; color:var(--text-dim); margin:0 0 22px; }
+  .section-label{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--text-dim); margin:22px 0 10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-label:first-of-type{margin-top:0;}
+  .section-label::before{ content:""; width:5px; height:5px; background:var(--gold); border-radius:1px; }
+  label{
+    display:block; font-size:12px; font-weight:600; color:var(--text-dim);
+    margin:0 0 6px; text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .field{margin-bottom:14px;}
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  input[type=text], input[type=date], input[type=email], select{
+    width:100%; background:var(--bg); border:1px solid var(--line-strong); color:var(--text);
+    padding:12px; border-radius:8px; font-family:'Inter',sans-serif; font-size:14.5px;
+    outline:none; transition:border-color .15s ease, box-shadow .15s ease; appearance:none;
+  }
+  select{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%235B6B85'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:34px; cursor:pointer;
+  }
+  input:focus, select:focus{ border-color:var(--blue); box-shadow:0 0 0 3px var(--blue-dim); }
+  input::placeholder{color:var(--text-faint);}
+  .field-error{ font-size:11.5px; color:var(--danger); margin-top:5px; display:none; }
+  .field.invalid input, .field.invalid select{border-color:var(--danger);}
+  .field.invalid .field-error{display:block;}
+
+  /* Phone: country code + number */
+  .phone-group{ display:flex; gap:8px; }
+  .phone-group select{ flex:0 0 118px; padding-left:10px; padding-right:28px; }
+  .phone-group input{ flex:1; min-width:0; }
+
+  /* Photo upload */
+  .photo-upload{
+    border:1.5px dashed var(--line-strong); border-radius:10px; background:var(--panel-alt);
+    padding:16px; cursor:pointer; display:flex; align-items:center; gap:14px; transition:border-color .12s ease;
+  }
+  .photo-upload:hover{ border-color:var(--blue); }
+  .photo-upload.has-photo{ border-style:solid; }
+  .photo-thumb{
+    width:56px; height:56px; border-radius:8px; background:var(--bg); border:1px solid var(--line);
+    flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:22px; color:var(--text-faint);
+  }
+  .photo-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .photo-copy{ font-size:13px; font-weight:600; color:var(--text-dim); }
+  .photo-copy .sub{ font-size:11.5px; font-weight:400; color:var(--text-faint); margin-top:2px; }
+  .field.invalid .photo-upload{ border-color:var(--danger); }
+
+  .tick-row{ display:flex; gap:10px; }
+  .tick-box{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
+    border:1px solid var(--line-strong); background:var(--bg); border-radius:8px;
+    padding:11px 8px; cursor:pointer; user-select:none; font-size:13.5px; font-weight:600;
+    color:var(--text-dim); transition:all .12s ease;
+  }
+  .tick-box:hover{border-color:var(--blue);}
+  .tick-box .box{
+    width:16px; height:16px; border-radius:4px; border:1.5px solid var(--line-strong);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .tick-box.active{ border-color:var(--blue); background:var(--blue-dim); color:var(--blue); }
+  .tick-box.active .box{ background:var(--blue); border-color:var(--blue); color:#fff; font-size:11px; font-weight:900; }
+  .tick-box.active .box::after{ content:"✓"; }
+
+  .duration-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .duration-opt{
+    border:1px solid var(--line-strong); background:var(--bg); border-radius:8px; padding:11px 8px;
+    text-align:center; font-size:13px; font-weight:600; cursor:pointer; color:var(--text-dim);
+    transition:all .12s ease; user-select:none;
+  }
+  .duration-opt:hover{border-color:var(--blue);}
+  .duration-opt.active{ border-color:var(--blue); background:var(--blue-dim); color:var(--blue); }
+
+  .btn{
+    width:100%; padding:14px 16px; border-radius:8px; border:none; font-family:'Inter',sans-serif;
+    font-weight:800; font-size:14px; letter-spacing:0.03em; text-transform:uppercase;
+    cursor:pointer; transition:transform .08s ease, opacity .12s ease; margin-top:16px;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn[disabled]{opacity:0.5; cursor:not-allowed;}
+  .btn-primary{ background:var(--blue); color:#fff; }
+  .btn-primary:hover:not([disabled]){background:var(--blue-dark);}
+  .btn-secondary{ background:transparent; border:1px solid var(--line-strong); color:var(--text); }
+  .btn-secondary:hover{ border-color:var(--blue); color:var(--blue); }
+
+  .switch-link{
+    display:block; text-align:center; margin-top:16px; font-family:'JetBrains Mono',monospace;
+    font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-faint);
+    background:none; border:none; cursor:pointer; width:100%;
+  }
+  .switch-link:hover{color:var(--blue);}
+
+  .setup-warning{
+    background:var(--danger-dim); border:1px solid rgba(192,57,43,0.3); color:var(--danger);
+    font-size:12px; padding:10px 12px; border-radius:8px; margin-bottom:18px; line-height:1.5;
+  }
+  .id-hint{
+    background:var(--gold-dim); border:1px solid rgba(184,134,11,0.3); color:var(--gold-dark);
+    font-size:12px; padding:10px 12px; border-radius:8px; margin-bottom:14px; line-height:1.5;
+  }
+
+  /* Confirm overlay (registration) */
+  .confirm-overlay{
+    position:absolute; inset:0; background:var(--panel); border-radius:16px; display:none;
+    align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:30px;
+  }
+  .confirm-overlay.show{display:flex;}
+  .confirm-icon{
+    width:56px; height:56px; border-radius:50%; background:var(--blue-dim); color:var(--blue);
+    display:flex; align-items:center; justify-content:center; font-size:28px; margin-bottom:16px;
+  }
+  .confirm-overlay.error .confirm-icon{ background:var(--danger-dim); color:var(--danger); }
+  .confirm-overlay h2{ font-family:'Bebas Neue',sans-serif; font-size:28px; margin:0 0 6px; letter-spacing:0.02em; }
+  .confirm-overlay p{ color:var(--text-dim); font-size:13.5px; margin:0; max-width:320px; }
+
+  /* Sign-in result */
+  .result{ text-align:center; }
+  .result-icon{
+    width:64px; height:64px; border-radius:50%; background:var(--blue-dim); color:var(--blue);
+    display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 16px;
+  }
+  .result.error .result-icon, .result.expired .result-icon{ background:var(--danger-dim); color:var(--danger); }
+  .result-name{ font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:0.02em; margin:0 0 4px; }
+  .result-sub{ font-size:12.5px; color:var(--text-dim); margin:0 0 22px; }
+  .countdown-box{
+    background:var(--panel-alt); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:16px;
+  }
+  .countdown-box.expired{ border-color:rgba(192,57,43,0.3); background:var(--danger-dim); }
+  .countdown-num{ font-family:'Bebas Neue',sans-serif; font-size:52px; line-height:1; color:var(--gold-dark); }
+  .countdown-box.expired .countdown-num{ color:var(--danger); font-size:26px; }
+  .countdown-label{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--text-dim); margin-top:6px;
+  }
+  .code-chip{
+    display:inline-block; background:var(--gold-dim); color:var(--gold-dark); font-family:'JetBrains Mono',monospace;
+    font-size:22px; font-weight:700; letter-spacing:0.12em; padding:10px 18px; border-radius:8px; margin-bottom:16px;
+  }
+  .error-msg{ color:var(--text-dim); font-size:13.5px; margin:0 0 20px; }
+  input.code-input{
+    font-family:'JetBrains Mono',monospace; font-size:20px; letter-spacing:0.08em; text-align:center;
+  }
+  input.code-input::placeholder{ font-size:14px; letter-spacing:normal; font-family:'Inter',sans-serif; }
+</style>
+</head>
+<body>
+<div class="card">
+  <p class="brand-eyebrow">// Fitness Centre</p>
+  <h1 id="mainTitle">GYM MEMBERSHIP</h1>
+
+  <div class="setup-warning" id="setupWarning" style="display:none;">
+    ⚠ SCRIPT_URL isn't set yet. Open this file's code and paste in your Apps Script /exec URL.
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="register">Register</button>
+    <button class="tab-btn" data-tab="signin">Sign In</button>
+    <button class="tab-btn" data-tab="signout">Sign Out</button>
+  </div>
+
+  <!-- ============ MEMBERSHIP REGISTRATION TAB ============ -->
+  <div class="tab-panel active" id="tab-register">
+    <p class="subhead">Your registration will be reviewed by the front desk before it's confirmed.</p>
+
+    <form id="regForm" novalidate>
+      <p class="section-label">Basic details</p>
+      <div class="field" id="field-class">
+        <label for="regClass">Registration Category</label>
+        <select id="regClass">
+          <option value="" disabled selected>Select category</option>
+          <option value="UG Student">UG Student</option>
+          <option value="UG Staff">UG Staff</option>
+          <option value="Non-UG Student">Non-UG Student</option>
+          <option value="Public">Public</option>
+        </select>
+        <p class="field-error">Please select a category.</p>
+      </div>
+
+      <div class="field-row">
+        <div class="field" id="field-otherNames">
+          <label for="regOtherNames">Other Names</label>
+          <input type="text" id="regOtherNames" placeholder="e.g. Kwame Yaw">
+          <p class="field-error">Required.</p>
+        </div>
+        <div class="field" id="field-surname">
+          <label for="regSurname">Surname</label>
+          <input type="text" id="regSurname" placeholder="e.g. Owusu">
+          <p class="field-error">Required.</p>
+        </div>
+      </div>
+
+      <div class="field" id="field-dept">
+        <label for="regDept">Department <span id="deptOptionalTag" style="color:var(--text-dim);text-transform:none;font-weight:400;">(optional)</span></label>
+        <input type="text" id="regDept" placeholder="e.g. Computer Science">
+        <p class="field-error" id="deptFieldError">Required for UG students and staff.</p>
+      </div>
+
+      <div class="field" id="field-id">
+        <label for="regId">ID No.</label>
+        <input type="text" id="regId" placeholder="e.g. 10123456 / Staff ID">
+        <p class="field-error">Please enter your ID number.</p>
+      </div>
+      <div class="id-hint" id="publicIdHint" style="display:none;">
+        No ID needed — a 7-digit member code will be generated for you automatically once your registration is approved. Find it later on the Sign In tab.
+      </div>
+
+      <div class="field" id="field-photo">
+        <label for="regPhotoInput">Photo</label>
+        <div class="photo-upload" id="photoUploadBox">
+          <div class="photo-thumb" id="photoThumb">📷</div>
+          <div class="photo-copy">
+            <div id="photoCopyMain">Tap to add a photo</div>
+            <div class="sub">Clear photo of your face, required for your membership record</div>
+          </div>
+          <input type="file" id="regPhotoInput" accept="image/*" capture="environment" hidden>
+        </div>
+        <p class="field-error">A photo is required.</p>
+      </div>
+
+      <p class="section-label">Personal information</p>
+      <div class="field-row">
+        <div class="field" id="field-dob">
+          <label for="regDob">Date of Birth</label>
+          <input type="date" id="regDob">
+          <p class="field-error">Please enter a date of birth.</p>
+        </div>
+        <div class="field" id="field-gender">
+          <label>Gender</label>
+          <div class="tick-row" id="genderRow">
+            <div class="tick-box" data-value="Male"><span class="box"></span> Male</div>
+            <div class="tick-box" data-value="Female"><span class="box"></span> Female</div>
+          </div>
+          <p class="field-error">Please select a gender.</p>
+        </div>
+      </div>
+
+      <div class="field" id="field-nationality">
+        <label for="regNationality">Nationality</label>
+        <input type="text" id="regNationality" placeholder="e.g. Ghanaian">
+        <p class="field-error">Required.</p>
+      </div>
+
+      <p class="section-label">Contact</p>
+      <div class="field" id="field-phone">
+        <label for="regPhone">Phone Number</label>
+        <div class="phone-group">
+          <select id="regPhoneCode" class="country-code-select"></select>
+          <input type="text" id="regPhone" placeholder="24 123 4567" inputmode="tel">
+        </div>
+        <p class="field-error">Please enter a valid phone number.</p>
+      </div>
+
+      <div class="field" id="field-email">
+        <label for="regEmail">Email Address</label>
+        <input type="email" id="regEmail" placeholder="e.g. kwame@example.com">
+        <p class="field-error">Please enter a valid email address.</p>
+      </div>
+
+      <div class="field" id="field-address">
+        <label for="regAddress">Address <span style="color:var(--text-dim);text-transform:none;font-weight:400;">(digital, postal, or residential)</span></label>
+        <input type="text" id="regAddress" placeholder="e.g. GA-184-9021, or P.O. Box LG 25, or House No. 12 East Legon">
+        <p class="field-error">Required.</p>
+      </div>
+
+      <p class="section-label">Subscription</p>
+      <div class="field" id="field-duration">
+        <label>Subscription</label>
+        <div class="duration-grid" id="durationGrid">
+          <div class="duration-opt" data-value="Walk-in">Walk-in</div>
+          <div class="duration-opt" data-value="Monthly">Monthly</div>
+          <div class="duration-opt" data-value="Semesterly/Quarterly">Semesterly / Qtly</div>
+          <div class="duration-opt" data-value="Half-yearly">Half-yearly</div>
+          <div class="duration-opt" data-value="Yearly">Yearly</div>
+        </div>
+        <p class="field-error">Please choose a subscription.</p>
+      </div>
+
+      <p class="section-label">Emergency Contact</p>
+      <div class="field" id="field-emergencyName">
+        <label for="regEmergencyName">Contact Name</label>
+        <input type="text" id="regEmergencyName" placeholder="e.g. Ama Owusu">
+        <p class="field-error">Required.</p>
+      </div>
+
+      <div class="field-row">
+        <div class="field" id="field-emergencyPhone">
+          <label for="regEmergencyPhone">Contact Phone</label>
+          <div class="phone-group">
+            <select id="regEmergencyPhoneCode" class="country-code-select"></select>
+            <input type="text" id="regEmergencyPhone" placeholder="20 987 6543" inputmode="tel">
+          </div>
+          <p class="field-error">Please enter a valid phone number.</p>
+        </div>
+        <div class="field" id="field-emergencyRelationship">
+          <label for="regEmergencyRelationship">Relationship</label>
+          <input type="text" id="regEmergencyRelationship" placeholder="e.g. Spouse, Parent">
+          <p class="field-error">Required.</p>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="submitBtn">Submit for Approval</button>
+    </form>
+
+    <div class="confirm-overlay" id="confirmOverlay">
+      <div class="confirm-icon" id="confirmIcon">✓</div>
+      <h2 id="confirmTitle">Submitted!</h2>
+      <p id="confirmDetail"></p>
+    </div>
+  </div>
+
+  <!-- ============ SIGN IN TAB ============ -->
+  <div class="tab-panel" id="tab-signin">
+    <div class="view active" id="view-code">
+      <p class="subhead">Enter your member code or ID number to sign in.</p>
+      <form id="codeForm" novalidate>
+        <div class="field" id="field-code">
+          <label for="codeInput">Your Code</label>
+          <input type="text" id="codeInput" class="code-input" placeholder="7-digit code or ID number">
+          <p class="field-error">Enter your code or ID number.</p>
+        </div>
+        <button type="submit" class="btn btn-primary" id="checkinBtn">Sign In</button>
+      </form>
+      <button class="switch-link" id="toLookupBtn">Don't have your code? →</button>
+    </div>
+
+    <div class="view" id="view-lookup">
+      <p class="subhead">Find your code using the phone number you registered with.</p>
+      <form id="lookupForm" novalidate>
+        <div class="field" id="field-phone-lookup">
+          <label for="phoneInput">Phone Number</label>
+          <div class="phone-group">
+            <select id="phoneInputCode" class="country-code-select"></select>
+            <input type="text" id="phoneInput" placeholder="24 123 4567">
+          </div>
+          <p class="field-error">Enter the phone number you registered with.</p>
+        </div>
+        <button type="submit" class="btn btn-primary" id="lookupBtn">Find My Status</button>
+      </form>
+      <button class="switch-link" id="toCodeBtn">← Back to sign in</button>
+    </div>
+
+    <div class="view" id="view-result">
+      <div class="result" id="resultBody"></div>
+    </div>
+  </div>
+
+  <!-- ============ SIGN OUT TAB ============ -->
+  <div class="tab-panel" id="tab-signout">
+    <div class="view active" id="view-out-code">
+      <p class="subhead">Enter your member code or ID number to sign out.</p>
+      <form id="codeOutForm" novalidate>
+        <div class="field" id="field-code-out">
+          <label for="codeOutInput">Your Code</label>
+          <input type="text" id="codeOutInput" class="code-input" placeholder="7-digit code or ID number">
+          <p class="field-error">Enter your code or ID number.</p>
+        </div>
+        <button type="submit" class="btn btn-primary" id="checkoutBtn">Sign Out</button>
+      </form>
+    </div>
+
+    <div class="view" id="view-out-result">
+      <div class="result" id="resultOutBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- PASTE YOUR APPS SCRIPT WEB APP URL HERE ----
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkAeb6KRP_8QsWOV1vH6uLubNeF8nHZ0jhDhJ0emGuOHpRjO2mWorpTXByQUuvS3lJ/exec";
+  // ---------------------------------------------------
+
+  if(!SCRIPT_URL || SCRIPT_URL.indexOf("PASTE_") === 0){
+    document.getElementById('setupWarning').style.display = 'block';
+  }
+
+  // ---- Country codes for phone fields ----
+  const COUNTRY_CODES = [
+    { code:"+233", label:"🇬🇭 +233", def:true },
+    { code:"+234", label:"🇳🇬 +234" },
+    { code:"+225", label:"🇨🇮 +225" },
+    { code:"+228", label:"🇹🇬 +228" },
+    { code:"+229", label:"🇧🇯 +229" },
+    { code:"+226", label:"🇧🇫 +226" },
+    { code:"+223", label:"🇲🇱 +223" },
+    { code:"+221", label:"🇸🇳 +221" },
+    { code:"+232", label:"🇸🇱 +232" },
+    { code:"+231", label:"🇱🇷 +231" },
+    { code:"+27",  label:"🇿🇦 +27" },
+    { code:"+254", label:"🇰🇪 +254" },
+    { code:"+1",   label:"🇺🇸 +1" },
+    { code:"+44",  label:"🇬🇧 +44" },
+    { code:"+91",  label:"🇮🇳 +91" },
+    { code:"+86",  label:"🇨🇳 +86" }
+  ];
+  function populateCountryCodeSelects(){
+    document.querySelectorAll('select.country-code-select').forEach(sel => {
+      sel.innerHTML = COUNTRY_CODES.map(c =>
+        `<option value="${c.code}"${c.def ? ' selected' : ''}>${c.label}</option>`
+      ).join('');
+    });
+  }
+  populateCountryCodeSelects();
+
+  // ---- Top-level tabs ----
+  const topTabs = document.querySelectorAll('.tab-bar > .tab-btn');
+  const topPanels = {
+    register: document.getElementById('tab-register'),
+    signin: document.getElementById('tab-signin'),
+    signout: document.getElementById('tab-signout')
+  };
+  topTabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      topTabs.forEach(b => b.classList.remove('active'));
+      Object.values(topPanels).forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      topPanels[btn.dataset.tab].classList.add('active');
+    });
+  });
+
+  /* ===================== MEMBERSHIP REGISTRATION ===================== */
+  const ID_REQUIRED_CLASSES = ["UG Student","UG Staff","Non-UG Student"];
+  let selectedDuration = null;
+  let selectedGender = null;
+
+  const form = document.getElementById('regForm');
+  const classField = document.getElementById('regClass');
+  const otherNamesField = document.getElementById('regOtherNames');
+  const surnameField = document.getElementById('regSurname');
+  const deptField = document.getElementById('regDept');
+  const deptOptionalTag = document.getElementById('deptOptionalTag');
+  const deptFieldError = document.getElementById('deptFieldError');
+  const idFieldWrap = document.getElementById('field-id');
+  const idField = document.getElementById('regId');
+  const publicIdHint = document.getElementById('publicIdHint');
+  const photoUploadBox = document.getElementById('photoUploadBox');
+  const photoInput = document.getElementById('regPhotoInput');
+  const photoThumb = document.getElementById('photoThumb');
+  const photoCopyMain = document.getElementById('photoCopyMain');
+  const regPhoneCode = document.getElementById('regPhoneCode');
+  const regEmergencyPhoneCode = document.getElementById('regEmergencyPhoneCode');
+  const dobField = document.getElementById('regDob');
+  const genderRow = document.getElementById('genderRow');
+  const nationalityField = document.getElementById('regNationality');
+  const phoneField = document.getElementById('regPhone');
+  const emailField = document.getElementById('regEmail');
+  const addressField = document.getElementById('regAddress');
+  const durationGrid = document.getElementById('durationGrid');
+  const emergencyNameField = document.getElementById('regEmergencyName');
+  const emergencyPhoneField = document.getElementById('regEmergencyPhone');
+  const emergencyRelationshipField = document.getElementById('regEmergencyRelationship');
+  const confirmOverlay = document.getElementById('confirmOverlay');
+  const confirmIcon = document.getElementById('confirmIcon');
+  const confirmTitle = document.getElementById('confirmTitle');
+  const confirmDetail = document.getElementById('confirmDetail');
+  const submitBtn = document.getElementById('submitBtn');
+
+  const UG_STAFF_STUDENT = ["UG Student","UG Staff"];
+
+  function isPublic(){ return classField.value === "Public"; }
+  function needsDept(){ return UG_STAFF_STUDENT.includes(classField.value); }
+
+  function updateConditionalFields(){
+    const dept = needsDept();
+    deptOptionalTag.style.display = dept ? 'none' : 'inline';
+    if(!dept) clearFieldError('field-dept');
+
+    if(isPublic()){
+      idFieldWrap.style.display = 'none';
+      publicIdHint.style.display = 'block';
+      clearFieldError('field-id');
+    } else {
+      idFieldWrap.style.display = 'block';
+      publicIdHint.style.display = 'none';
+    }
+  }
+  classField.addEventListener('change', updateConditionalFields);
+
+  genderRow.addEventListener('click', (e) => {
+    const opt = e.target.closest('.tick-box');
+    if(!opt) return;
+    [...genderRow.children].forEach(c => c.classList.remove('active'));
+    opt.classList.add('active');
+    selectedGender = opt.dataset.value;
+    clearFieldError('field-gender');
+  });
+
+  durationGrid.addEventListener('click', (e) => {
+    const opt = e.target.closest('.duration-opt');
+    if(!opt) return;
+    [...durationGrid.children].forEach(c => c.classList.remove('active'));
+    opt.classList.add('active');
+    selectedDuration = opt.dataset.value;
+    clearFieldError('field-duration');
+  });
+
+  // ---- Photo upload ----
+  let photoBase64 = null;
+  let photoMimeType = null;
+  const MAX_PHOTO_BYTES = 4 * 1024 * 1024; // ~4MB, generous but keeps requests small
+
+  photoUploadBox.addEventListener('click', () => photoInput.click());
+  photoInput.addEventListener('change', () => {
+    const file = photoInput.files[0];
+    if(!file) return;
+    if(!file.type.startsWith('image/')){
+      showConfirm(true, "Not an image", "Please choose an image file.");
+      photoInput.value = '';
+      return;
+    }
+    if(file.size > MAX_PHOTO_BYTES){
+      showConfirm(true, "Photo too large", "Please choose a photo under 4MB.");
+      photoInput.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      photoBase64 = reader.result;
+      photoMimeType = file.type;
+      photoThumb.innerHTML = `<img src="${reader.result}" alt="Selected photo">`;
+      photoCopyMain.textContent = "Photo added — tap to change";
+      photoUploadBox.classList.add('has-photo');
+      clearFieldError('field-photo');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function clearFieldError(id){ document.getElementById(id).classList.remove('invalid'); }
+  function markInvalid(id){ document.getElementById(id).classList.add('invalid'); }
+  function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+  function showConfirm(isError, title, detail){
+    confirmOverlay.classList.toggle('error', isError);
+    confirmIcon.textContent = isError ? '✕' : '✓';
+    confirmTitle.textContent = title;
+    confirmDetail.textContent = detail;
+    confirmOverlay.classList.add('show');
+    setTimeout(() => confirmOverlay.classList.remove('show'), 4200);
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    let valid = true;
+    const dept = needsDept();
+    const publicCategory = isPublic();
+
+    if(!classField.value){ markInvalid('field-class'); valid = false; } else clearFieldError('field-class');
+    if(!otherNamesField.value.trim()){ markInvalid('field-otherNames'); valid = false; } else clearFieldError('field-otherNames');
+    if(!surnameField.value.trim()){ markInvalid('field-surname'); valid = false; } else clearFieldError('field-surname');
+
+    if(dept && !deptField.value.trim()){ markInvalid('field-dept'); valid = false; } else clearFieldError('field-dept');
+
+    if(!publicCategory && !idField.value.trim()){ markInvalid('field-id'); valid = false; } else clearFieldError('field-id');
+
+    if(!photoBase64){ markInvalid('field-photo'); valid = false; } else clearFieldError('field-photo');
+
+    if(!dobField.value){ markInvalid('field-dob'); valid = false; } else clearFieldError('field-dob');
+    if(!selectedGender){ markInvalid('field-gender'); valid = false; } else clearFieldError('field-gender');
+    if(!nationalityField.value.trim()){ markInvalid('field-nationality'); valid = false; } else clearFieldError('field-nationality');
+
+    const phoneDigits = phoneField.value.replace(/[^0-9+]/g, '');
+    if(!phoneDigits || phoneDigits.replace(/\D/g,'').length < 9){ markInvalid('field-phone'); valid = false; } else clearFieldError('field-phone');
+
+    if(!isValidEmail(emailField.value.trim())){ markInvalid('field-email'); valid = false; } else clearFieldError('field-email');
+
+    if(!addressField.value.trim()){ markInvalid('field-address'); valid = false; } else clearFieldError('field-address');
+
+    if(!selectedDuration){ markInvalid('field-duration'); valid = false; } else clearFieldError('field-duration');
+
+    if(!emergencyNameField.value.trim()){ markInvalid('field-emergencyName'); valid = false; } else clearFieldError('field-emergencyName');
+    const emPhoneDigits = emergencyPhoneField.value.replace(/[^0-9+]/g, '');
+    if(!emPhoneDigits || emPhoneDigits.replace(/\D/g,'').length < 9){ markInvalid('field-emergencyPhone'); valid = false; } else clearFieldError('field-emergencyPhone');
+    if(!emergencyRelationshipField.value.trim()){ markInvalid('field-emergencyRelationship'); valid = false; } else clearFieldError('field-emergencyRelationship');
+
+    if(!valid) return;
+
+    const now = new Date();
+    const fullName = `${surnameField.value.trim()} ${otherNamesField.value.trim()}`.trim();
+    const payload = {
+      action: "submit",
+      class: classField.value,
+      name: fullName,
+      department: deptField.value.trim(),
+      idNo: publicCategory ? "" : idField.value.trim(),
+      dob: dobField.value,
+      gender: selectedGender,
+      nationality: nationalityField.value.trim(),
+      phone: `${regPhoneCode.value} ${phoneField.value.trim()}`,
+      email: emailField.value.trim(),
+      address: addressField.value.trim(),
+      duration: selectedDuration,
+      emergencyName: emergencyNameField.value.trim(),
+      emergencyPhone: `${regEmergencyPhoneCode.value} ${emergencyPhoneField.value.trim()}`,
+      emergencyRelationship: emergencyRelationshipField.value.trim(),
+      date: now.toLocaleDateString(),
+      time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+      photoBase64: photoBase64,
+      photoMimeType: photoMimeType
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting…";
+
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit for Approval";
+      if(data.status === "ok"){
+        showConfirm(false, "Submitted!", `${fullName} — waiting on front desk approval. Once approved, use the Sign In tab with your phone number to find your code.`);
+        form.reset();
+        classField.value = "";
+        [...durationGrid.children].forEach(c => c.classList.remove('active'));
+        [...genderRow.children].forEach(c => c.classList.remove('active'));
+        selectedDuration = null;
+        selectedGender = null;
+        photoBase64 = null;
+        photoMimeType = null;
+        photoThumb.innerHTML = "📷";
+        photoCopyMain.textContent = "Tap to add a photo";
+        photoUploadBox.classList.remove('has-photo');
+        populateCountryCodeSelects();
+        updateConditionalFields();
+      } else {
+        showConfirm(true, "Couldn't submit", data.message || "Please try again or tell the front desk.");
+      }
+    })
+    .catch(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit for Approval";
+      showConfirm(true, "No connection", "Check the network and try again.");
+    });
+  });
+
+  updateConditionalFields();
+
+  /* ===================== SIGN IN ===================== */
+  const DURATION_DAYS = {
+    "Walk-in": 1, "Monthly": 30, "Semesterly/Quarterly": 120, "Half-yearly": 182, "Yearly": 365
+  };
+
+  const views = {
+    code: document.getElementById('view-code'),
+    lookup: document.getElementById('view-lookup'),
+    result: document.getElementById('view-result')
+  };
+  function showView(name){
+    Object.values(views).forEach(v => v.classList.remove('active'));
+    views[name].classList.add('active');
+  }
+  document.getElementById('toLookupBtn').addEventListener('click', () => showView('lookup'));
+  document.getElementById('toCodeBtn').addEventListener('click', () => showView('code'));
+
+  function parseRegDate(dateStr){
+    if(!dateStr) return null;
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function daysLeft(member){
+    const regDate = parseRegDate(member.date);
+    const days = DURATION_DAYS[member.duration];
+    if(!regDate || days === undefined) return null;
+    const expiry = new Date(regDate);
+    expiry.setHours(0,0,0,0);
+    expiry.setDate(expiry.getDate() + days);
+    const today = new Date(); today.setHours(0,0,0,0);
+    return Math.round((expiry - today) / 86400000);
+  }
+
+  function renderMemberResult(member, opts){
+    opts = opts || {};
+    const left = daysLeft(member);
+    const expired = left !== null && left < 0;
+
+    let countdownHtml;
+    if(left === null){
+      countdownHtml = `<div class="countdown-box"><div class="countdown-label">Subscription info unavailable</div></div>`;
+    } else if(expired){
+      countdownHtml = `<div class="countdown-box expired"><div class="countdown-num">Expired</div><div class="countdown-label">${Math.abs(left)} day${Math.abs(left)===1?'':'s'} ago — see front desk to renew</div></div>`;
+    } else if(left === 0){
+      countdownHtml = `<div class="countdown-box"><div class="countdown-num">Today</div><div class="countdown-label">Last day of your subscription</div></div>`;
+    } else {
+      countdownHtml = `<div class="countdown-box"><div class="countdown-num">${left}</div><div class="countdown-label">day${left===1?'':'s'} left on your subscription</div></div>`;
+    }
+
+    const codeChip = opts.showCode ? `<div class="code-chip">${escapeHtml(member.idNo||'')}</div>` : '';
+
+    document.getElementById('resultBody').innerHTML = `
+      <div class="result-icon">${expired ? '⚠' : '✓'}</div>
+      <div class="result-name">${escapeHtml(member.name||'')}</div>
+      <div class="result-sub">${escapeHtml(member.class||'')}${opts.subtitle ? ' · ' + opts.subtitle : ''}</div>
+      ${codeChip}
+      ${countdownHtml}
+      <button class="btn btn-secondary" id="doneBtn">Done</button>
+    `;
+    document.querySelector('#view-result .result').className = 'result' + (expired ? ' expired' : '');
+    showView('result');
+    document.getElementById('doneBtn').addEventListener('click', resetSignIn);
+  }
+
+  function renderMessage(isError, title, message){
+    document.getElementById('resultBody').innerHTML = `
+      <div class="result-icon">${isError ? '✕' : 'ℹ'}</div>
+      <div class="result-name">${escapeHtml(title)}</div>
+      <p class="error-msg">${escapeHtml(message)}</p>
+      <button class="btn btn-secondary" id="doneBtn">Done</button>
+    `;
+    document.querySelector('#view-result .result').className = 'result' + (isError ? ' error' : '');
+    showView('result');
+    document.getElementById('doneBtn').addEventListener('click', resetSignIn);
+  }
+
+  function resetSignIn(){
+    document.getElementById('codeForm').reset();
+    document.getElementById('lookupForm').reset();
+    clearFieldError('field-code');
+    clearFieldError('field-phone-lookup');
+    showView('code');
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+
+  const codeForm = document.getElementById('codeForm');
+  const codeInput = document.getElementById('codeInput');
+  const checkinBtn = document.getElementById('checkinBtn');
+
+  codeForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const code = codeInput.value.trim();
+    if(!code){ markInvalid('field-code'); return; }
+    clearFieldError('field-code');
+
+    checkinBtn.disabled = true;
+    checkinBtn.textContent = "Signing in…";
+
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "checkin", code: code })
+    })
+    .then(res => res.json())
+    .then(data => {
+      checkinBtn.disabled = false;
+      checkinBtn.textContent = "Sign In";
+      if(data.status === "ok"){
+        renderMemberResult(data.member, { subtitle: "Signed in" });
+      } else {
+        renderMessage(true, "Code not recognized", "Double check the code, or ask the front desk for help.");
+      }
+    })
+    .catch(() => {
+      checkinBtn.disabled = false;
+      checkinBtn.textContent = "Sign In";
+      renderMessage(true, "No connection", "Check the network and try again.");
+    });
+  });
+
+  const lookupForm = document.getElementById('lookupForm');
+  const phoneInput = document.getElementById('phoneInput');
+  const lookupBtn = document.getElementById('lookupBtn');
+
+  lookupForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const phoneDigits = phoneInput.value.replace(/[^0-9+]/g, '');
+    if(!phoneDigits || phoneDigits.replace(/\D/g,'').length < 9){ markInvalid('field-phone-lookup'); return; }
+    clearFieldError('field-phone-lookup');
+
+    lookupBtn.disabled = true;
+    lookupBtn.textContent = "Looking up…";
+
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "lookup", phone: `${document.getElementById('phoneInputCode').value} ${phoneInput.value.trim()}` })
+    })
+    .then(res => res.json())
+    .then(data => {
+      lookupBtn.disabled = false;
+      lookupBtn.textContent = "Find My Status";
+      if(data.status !== "ok"){
+        renderMessage(true, "Something went wrong", "Please try again.");
+        return;
+      }
+      if(!data.found){
+        renderMessage(true, "Not found", "We couldn't find a registration with that phone number.");
+      } else if(!data.approved){
+        renderMessage(false, "Still Pending", "Your registration hasn't been approved yet — check back soon.");
+      } else {
+        renderMemberResult(data.member, { showCode: true, subtitle: "Approved" });
+      }
+    })
+    .catch(() => {
+      lookupBtn.disabled = false;
+      lookupBtn.textContent = "Find My Status";
+      renderMessage(true, "No connection", "Check the network and try again.");
+    });
+  });
+
+  /* ===================== SIGN OUT ===================== */
+  const outViews = {
+    code: document.getElementById('view-out-code'),
+    result: document.getElementById('view-out-result')
+  };
+  function showOutView(name){
+    Object.values(outViews).forEach(v => v.classList.remove('active'));
+    outViews[name].classList.add('active');
+  }
+
+  function renderOutMemberResult(member){
+    document.getElementById('resultOutBody').innerHTML = `
+      <div class="result-icon">✓</div>
+      <div class="result-name">${escapeHtml(member.name||'')}</div>
+      <div class="result-sub">${escapeHtml(member.class||'')} · Signed out</div>
+      <button class="btn btn-secondary" id="doneOutBtn">Done</button>
+    `;
+    document.querySelector('#view-out-result .result').className = 'result';
+    showOutView('result');
+    document.getElementById('doneOutBtn').addEventListener('click', resetSignOut);
+  }
+
+  function renderOutMessage(isError, title, message){
+    document.getElementById('resultOutBody').innerHTML = `
+      <div class="result-icon">${isError ? '✕' : 'ℹ'}</div>
+      <div class="result-name">${escapeHtml(title)}</div>
+      <p class="error-msg">${escapeHtml(message)}</p>
+      <button class="btn btn-secondary" id="doneOutBtn">Done</button>
+    `;
+    document.querySelector('#view-out-result .result').className = 'result' + (isError ? ' error' : '');
+    showOutView('result');
+    document.getElementById('doneOutBtn').addEventListener('click', resetSignOut);
+  }
+
+  function resetSignOut(){
+    document.getElementById('codeOutForm').reset();
+    clearFieldError('field-code-out');
+    showOutView('code');
+  }
+
+  const codeOutForm = document.getElementById('codeOutForm');
+  const codeOutInput = document.getElementById('codeOutInput');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+
+  codeOutForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    const code = codeOutInput.value.trim();
+    if(!code){ markInvalid('field-code-out'); return; }
+    clearFieldError('field-code-out');
+
+    checkoutBtn.disabled = true;
+    checkoutBtn.textContent = "Signing out…";
+
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "checkout", code: code })
+    })
+    .then(res => res.json())
+    .then(data => {
+      checkoutBtn.disabled = false;
+      checkoutBtn.textContent = "Sign Out";
+      if(data.status === "ok"){
+        renderOutMemberResult(data.member);
+      } else {
+        renderOutMessage(true, "Couldn't sign out", data.message || "Double check the code, or ask the front desk for help.");
+      }
+    })
+    .catch(() => {
+      checkoutBtn.disabled = false;
+      checkoutBtn.textContent = "Sign Out";
+      renderOutMessage(true, "No connection", "Check the network and try again.");
+    });
+  });
+})();
+</script>
+</body>
+</html>
